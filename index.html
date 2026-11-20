@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Philly Permit Parking Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  html, body, #map { height: 100%; margin: 0; }
+  body { font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #1f2328; }
+  /* Tone the street map down a little so the permit lines stand out */
+  .leaflet-tile-pane { filter: saturate(0.45) brightness(1.04); }
+
+  .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.3); padding: 10px 12px; max-width: 250px; }
+  .card summary { font-weight: 700; font-size: 15px; cursor: pointer; }
+  .card p { margin: 8px 0 0; }
+  .card .row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .card .line { flex: none; width: 26px; height: 0; border-top: 4px solid; }
+  .card .area { flex: none; width: 22px; height: 14px; border: 2px dashed; }
+  .card .fine { color: #59636e; font-size: 12px; }
+  .card .error { color: #b42318; font-weight: 600; }
+
+  .leaflet-popup-content { margin: 12px 14px; font-size: 14px; line-height: 1.4; }
+  .pop-title { font-weight: 700; font-size: 15px; }
+  .pop-sub { color: #59636e; margin-bottom: 6px; }
+  .pop-rule { margin-top: 4px; }
+  .pop-warn { margin-top: 8px; color: #8a4b00; font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ---------- Settings ----------
+const DISTRICTS = [6];                       // which data/district-N.geojson files to load
+const DISTRICT_COLORS = { 6: '#c2185b' };    // line colour per district
+const colorOf = d => DISTRICT_COLORS[d] || `hsl(${(d * 47) % 360} 70% 40%)`;
+
+// ---------- Map ----------
+const map = L.map('map').setView([39.961, -75.172], 15);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+// Canvas drawing is fast, and "tolerance" makes thin lines easy to tap on a phone
+const canvas = L.canvas({ tolerance: 8, padding: 0.5 });
+
+// ---------- Info card ----------
+const card = L.control({ position: 'topright' });
+card.onAdd = () => {
+  const el = L.DomUtil.create('details', 'card');
+  el.open = window.innerWidth > 600;
+  el.innerHTML = `<summary>Philly permit parking</summary>
+    <div id="legend"></div>
+    <p>Each line is drawn on the side of the street where the permit applies. Tap a line for the details.</p>
+    <p class="fine" id="note">Unofficial map. Posted signs always win.</p>`;
+  L.DomEvent.disableClickPropagation(el);
+  return el;
+};
+card.addTo(map);
+
+// ---------- Text helpers ----------
+const SIDE = { N: 'North side', S: 'South side', E: 'East side', W: 'West side' };
+const titleCase = s => s.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
+const blockLabel = b => { const [num, ...rest] = b.split(' '); return `${num} block of ${titleCase(rest.join(' '))}`; };
+const limitLabel = l => l.split('&').map(x => x.trim().replace(/^(\d+)\s*HR$/, '$1-hour').replace(/^(\d+)\s*MIN$/, '$1-minute')).join(' / ') + ' limit';
+const hoursLabel = h => h.replace(/-/g, '–').replace(/\b(MON|TUE|WED|THUR?|FRI|SAT|SUN)\b/g, d => d[0] + d.slice(1).toLowerCase());
+
+function popupHtml(p) {
+  const rules = p.rules.map(r => `<div class="pop-rule">Everyone else: <b>${limitLabel(r.limit)}</b>, ${hoursLabel(r.hours)}</div>`).join('');
+  const warn = p.rules.length > 1
+    ? `<div class="pop-warn">PPA lists ${p.rules.length} different rules for this block and doesn't say which stretch each one covers. Check the signs.</div>` : '';
+  return `<div class="pop-title">${blockLabel(p.block)}</div>
+    <div class="pop-sub">${SIDE[p.side]} · District ${p.district}</div>
+    <div>District ${p.district} permit: <b>no time limit</b></div>${rules}${warn}`;
+}
+
+// ---------- Drawing lines on the correct side of the street ----------
+// The data stores each block as the street's centre line, pointing so that the permit
+// side is on the RIGHT. Here we slide the line a few screen pixels to the right.
+const blocks = [];   // { lines, casing, layer }
+let weight = 3;
+
+function shiftRight(lonLats, px, zoom) {
+  const pts = lonLats.map(c => map.project([c[1], c[0]], zoom));
+  return pts.map((p, i) => {
+    const a = pts[Math.max(i - 1, 0)], b = pts[Math.min(i + 1, pts.length - 1)];
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+    // on screen, y grows downward, so "right of travel" is (-dy, dx)
+    return map.unproject([p.x - dy / len * px, p.y + dx / len * px], zoom);
+  });
+}
+
+function redraw() {
+  const z = map.getZoom();
+  const metresPerPixel = 40075016.686 * Math.cos(map.getCenter().lat * Math.PI / 180) / (256 * 2 ** z);
+  const shift = Math.max(3, 5 / metresPerPixel);          // about 5 m from the centre line, never less than 3 px
+  weight = z >= 18 ? 6 : z >= 17 ? 5 : z >= 16 ? 4 : 3;
+  for (const b of blocks) {
+    const latLngs = b.lines.map(l => shiftRight(l, shift, z));
+    b.casing.setLatLngs(latLngs).setStyle({ weight: weight + 3 });
+    b.layer.setLatLngs(latLngs).setStyle({ weight });
+  }
+}
+map.on('zoomend', redraw);
+
+// ---------- Load the data ----------
+async function loadDistrict(d) {
+  const res = await fetch(`data/district-${d}.geojson`);
+  if (!res.ok) throw new Error(res.status);
+  const data = await res.json();
+  const color = colorOf(d);
+  const casings = L.layerGroup().addTo(map), lines = L.layerGroup();
+
+  for (const f of data.features) {
+    if (f.properties.kind === 'district') {
+      const outline = f.geometry.coordinates[0].map(c => [c[1], c[0]]);
+      L.polygon(outline, { renderer: canvas, color, weight: 2, dashArray: '6 6', fillOpacity: 0.07, interactive: false }).addTo(map);
+    } else {
+      // white edge underneath so the colour reads clearly on top of the street map
+      const casing = L.polyline([], { renderer: canvas, color: '#fff', opacity: 0.9, lineCap: 'butt', interactive: false }).addTo(casings);
+      const layer = L.polyline([], { renderer: canvas, color, lineCap: 'butt' }).addTo(lines);
+      layer.bindPopup(popupHtml(f.properties));
+      layer.on('mouseover', () => layer.setStyle({ weight: weight + 3 }));
+      layer.on('mouseout', () => layer.setStyle({ weight }));
+      blocks.push({ lines: f.geometry.coordinates, casing, layer });
+    }
+  }
+  lines.addTo(map);
+
+  document.getElementById('legend').insertAdjacentHTML('beforeend',
+    `<div class="row"><span class="line" style="border-color:${color}"></span>District ${d} permit block</div>
+     <div class="row"><span class="area" style="border-color:${color}; background:color-mix(in srgb, ${color} 10%, transparent)"></span>District ${d} boundary</div>`);
+  return data;
+}
+
+Promise.all(DISTRICTS.map(loadDistrict)).then(all => {
+  redraw();
+  const pts = all.flatMap(d => d.features.filter(f => f.properties.kind === 'district').flatMap(f => f.geometry.coordinates[0].map(c => [c[1], c[0]])));
+  map.fitBounds(pts, { padding: [10, 10] });
+  document.getElementById('note').textContent =
+    `Unofficial map built from the Parking Authority's published list as of ${all[0].generated}. That list can be out of date or wrong. Posted signs always win.`;
+}).catch(() => {
+  document.getElementById('note').innerHTML =
+    '<span class="error">The map data did not load.</span> This page has to be opened from a website such as GitHub Pages. It will not work by double-clicking the file.';
+});
+</script>
+</body>
+</html>
