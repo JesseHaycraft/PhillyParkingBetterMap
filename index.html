@@ -15,10 +15,18 @@
   .card summary { font-weight: 700; font-size: 15px; cursor: pointer; }
   .card p { margin: 8px 0 0; }
   .card .row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-  .card .line { flex: none; width: 26px; height: 0; border-top: 4px solid; }
-  .card .area { flex: none; width: 22px; height: 14px; border: 2px dashed; }
+  .card .line { flex: none; width: 26px; height: 4px; background: #c2185b; }
+  .card .line.two { background: repeating-linear-gradient(90deg, #c2185b 0 7px, #1565c0 7px 14px); }
+  .card .area { flex: none; width: 22px; height: 12px; border: 2px dashed #c2185b; background: rgba(194, 24, 91, .08); }
   .card .fine { color: #59636e; font-size: 12px; }
   .card .error { color: #b42318; font-weight: 600; }
+
+  /* District numbers on the map */
+  .dlabel { font-weight: 800; font-size: 17px; white-space: nowrap; opacity: .85; pointer-events: none;
+            text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; }
+  .dlabel span { display: inline-block; transform: translate(-50%, -50%); }
+  .dlabel small { font-size: 12px; font-weight: 700; }
+  .far .dlabel small { display: none; }
 
   .leaflet-popup-content { margin: 12px 14px; font-size: 14px; line-height: 1.4; }
   .pop-title { font-weight: 700; font-size: 15px; }
@@ -33,12 +41,13 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ---------- Settings ----------
-const DISTRICTS = [6];                       // which data/district-N.geojson files to load
-const DISTRICT_COLORS = { 6: '#c2185b' };    // line colour per district
-const colorOf = d => DISTRICT_COLORS[d] || `hsl(${(d * 47) % 360} 70% 40%)`;
+// Line colours. The data file gives each district one of these, picked so that
+// districts next to each other never share a colour.
+const PALETTE = ['#c2185b', '#1565c0', '#2e7d32', '#e65100', '#6a1b9a', '#00838f', '#6d4c41'];
+const START = { center: [39.9545, -75.1670], zoom: 14 };   // Center City
 
 // ---------- Map ----------
-const map = L.map('map').setView([39.961, -75.172], 15);
+const map = L.map('map', { minZoom: 11 }).setView(START.center, START.zoom);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -52,7 +61,9 @@ card.onAdd = () => {
   const el = L.DomUtil.create('details', 'card');
   el.open = window.innerWidth > 600;
   el.innerHTML = `<summary>Philly permit parking</summary>
-    <div id="legend"></div>
+    <div class="row"><span class="line"></span>Permit block. The colour shows the district.</div>
+    <div class="row"><span class="line two"></span>Block shared by two districts</div>
+    <div class="row"><span class="area"></span>District boundary (approximate)</div>
     <p>Each line is drawn on the side of the street where the permit applies. Tap a line for the details.</p>
     <p class="fine" id="note">Unofficial map. Posted signs always win.</p>`;
   L.DomEvent.disableClickPropagation(el);
@@ -61,25 +72,29 @@ card.onAdd = () => {
 card.addTo(map);
 
 // ---------- Text helpers ----------
-const SIDE = { N: 'North side', S: 'South side', E: 'East side', W: 'West side' };
-const titleCase = s => s.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
-const blockLabel = b => { const [num, ...rest] = b.split(' '); return `${num} block of ${titleCase(rest.join(' '))}`; };
+const SIDE = { N: 'North side', S: 'South side', E: 'East side', W: 'West side', '?': 'Side not clear' };
+const titleCase = s => s.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase()).replace(/\bMc ([A-Z])/g, 'Mc$1');
+const blockLabel = b => { const [num, ...rest] = b.split(' '); return `${num === '0' ? 'Unit' : num} block of ${titleCase(rest.join(' '))}`; };
 const limitLabel = l => l.split('&').map(x => x.trim().replace(/^(\d+)\s*HR$/, '$1-hour').replace(/^(\d+)\s*MIN$/, '$1-minute')).join(' / ') + ' limit';
 const hoursLabel = h => h.replace(/-/g, '–').replace(/\b(MON|TUE|WED|THUR?|FRI|SAT|SUN)\b/g, d => d[0] + d.slice(1).toLowerCase());
+const list = (a, word) => a.length > 1 ? a.slice(0, -1).join(', ') + ` ${word} ` + a[a.length - 1] : String(a[0]);
 
 function popupHtml(p) {
-  const rules = p.rules.map(r => `<div class="pop-rule">Everyone else: <b>${limitLabel(r.limit)}</b>, ${hoursLabel(r.hours)}</div>`).join('');
-  const warn = p.rules.length > 1
-    ? `<div class="pop-warn">PPA lists ${p.rules.length} different rules for this block and doesn't say which stretch each one covers. Check the signs.</div>` : '';
+  const d = p.districts;
+  const rules = p.rules.map(r => `<div class="pop-rule">Everyone else: <b>${limitLabel(r.limit)}</b>${r.hours ? ', ' + hoursLabel(r.hours) : ' (hours not listed)'}</div>`).join('');
+  let warn = '';
+  if (p.rules.length > 1) warn += `<div class="pop-warn">The Parking Authority lists ${p.rules.length} different rules for this block and doesn't say which stretch each one covers. Check the signs.</div>`;
+  if (p.side === '?') warn += `<div class="pop-warn">The Parking Authority lists this as "${titleCase(p.sideText)}", which doesn't fit the way this street runs, so the line is drawn down the middle. Check the signs.</div>`;
+  if (p.listedAs) warn += `<div class="pop-warn">The Parking Authority lists this block under District ${list(p.listedAs, 'and')}, which is far from here. It is shown as District ${list(d, 'and')} because of where it is. Check the signs.</div>`;
   return `<div class="pop-title">${blockLabel(p.block)}</div>
-    <div class="pop-sub">${SIDE[p.side]} · District ${p.district}</div>
-    <div>District ${p.district} permit: <b>no time limit</b></div>${rules}${warn}`;
+    <div class="pop-sub">${SIDE[p.side]} · District${d.length > 1 ? 's' : ''} ${list(d, 'and')}</div>
+    <div>District ${list(d, 'or')} permit: <b>no time limit</b></div>${rules}${warn}`;
 }
 
 // ---------- Drawing lines on the correct side of the street ----------
 // The data stores each block as the street's centre line, pointing so that the permit
 // side is on the RIGHT. Here we slide the line a few screen pixels to the right.
-const blocks = [];   // { lines, casing, layer }
+const blocks = [];   // { lines, centred, casing, layers }
 let weight = 3;
 
 function shiftRight(lonLats, px, zoom) {
@@ -92,56 +107,67 @@ function shiftRight(lonLats, px, zoom) {
   });
 }
 
+// A block shared by several districts is drawn as dashes that take turns between their colours
+const dashOf = (i, count, w) => i === 0 ? null : { dashArray: `${w * 3} ${w * 3 * (count - 1)}`, dashOffset: String(w * 3 * (count - i)) };
+
 function redraw() {
   const z = map.getZoom();
   const metresPerPixel = 40075016.686 * Math.cos(map.getCenter().lat * Math.PI / 180) / (256 * 2 ** z);
-  const shift = Math.max(3, 5 / metresPerPixel);          // about 5 m from the centre line, never less than 3 px
-  weight = z >= 18 ? 6 : z >= 17 ? 5 : z >= 16 ? 4 : 3;
+  weight = z >= 18 ? 6 : z >= 17 ? 5 : z >= 16 ? 4 : z >= 15 ? 3 : z >= 14 ? 2.5 : z >= 13 ? 2 : 1.5;
+  const shift = Math.max(weight, 5 / metresPerPixel);     // about 5 m from the centre line
+  const casingWeight = z >= 15 ? weight + 3 : z >= 14 ? weight + 2 : 0;   // no white edge when zoomed far out
   for (const b of blocks) {
-    const latLngs = b.lines.map(l => shiftRight(l, shift, z));
-    b.casing.setLatLngs(latLngs).setStyle({ weight: weight + 3 });
-    b.layer.setLatLngs(latLngs).setStyle({ weight });
+    const latLngs = b.lines.map(l => shiftRight(l, b.centred ? 0 : shift, z));
+    b.casing.setLatLngs(latLngs).setStyle({ weight: casingWeight });
+    b.layers.forEach((layer, i) => layer.setLatLngs(latLngs).setStyle({ weight, ...dashOf(i, b.layers.length, weight) }));
   }
+  map.getContainer().classList.toggle('far', z < 14);
 }
 map.on('zoomend', redraw);
 
 // ---------- Load the data ----------
-async function loadDistrict(d) {
-  const res = await fetch(`data/district-${d}.geojson`);
+function centreOf(ring) {       // middle of a district outline, for its label
+  let area = 0, x = 0, y = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const cross = ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+    area += cross; x += (ring[j][0] + ring[i][0]) * cross; y += (ring[j][1] + ring[i][1]) * cross;
+  }
+  return [y / (3 * area), x / (3 * area)];
+}
+
+async function load() {
+  const res = await fetch('data/parking.geojson');
   if (!res.ok) throw new Error(res.status);
   const data = await res.json();
-  const color = colorOf(d);
+  const colorOf = {};
   const casings = L.layerGroup().addTo(map), lines = L.layerGroup();
 
   for (const f of data.features) {
-    if (f.properties.kind === 'district') {
-      const outline = f.geometry.coordinates[0].map(c => [c[1], c[0]]);
-      L.polygon(outline, { renderer: canvas, color, weight: 2, dashArray: '6 6', fillOpacity: 0.07, interactive: false }).addTo(map);
+    const p = f.properties;
+    if (p.kind === 'district') {
+      const color = colorOf[p.district] = PALETTE[p.color % PALETTE.length];
+      const ring = f.geometry.coordinates[0];
+      L.polygon(ring.map(c => [c[1], c[0]]), { renderer: canvas, color, weight: 2, dashArray: '6 6', fillOpacity: 0.06, interactive: false }).addTo(map);
+      L.marker(centreOf(ring), { interactive: false, keyboard: false,
+        icon: L.divIcon({ className: 'dlabel', iconSize: [0, 0], html: `<span style="color:${color}"><small>District </small>${p.district}</span>` }) }).addTo(map);
     } else {
       // white edge underneath so the colour reads clearly on top of the street map
       const casing = L.polyline([], { renderer: canvas, color: '#fff', opacity: 0.9, lineCap: 'butt', interactive: false }).addTo(casings);
-      const layer = L.polyline([], { renderer: canvas, color, lineCap: 'butt' }).addTo(lines);
-      layer.bindPopup(popupHtml(f.properties));
-      layer.on('mouseover', () => layer.setStyle({ weight: weight + 3 }));
-      layer.on('mouseout', () => layer.setStyle({ weight }));
-      blocks.push({ lines: f.geometry.coordinates, casing, layer });
+      const layers = p.districts.map((d, i) =>
+        L.polyline([], { renderer: canvas, color: colorOf[d] || '#555', lineCap: 'butt', interactive: i === 0 }).addTo(lines));
+      layers[0].bindPopup(() => popupHtml(p));
+      layers[0].on('mouseover', () => layers.forEach(l => l.setStyle({ weight: weight + 3 })));
+      layers[0].on('mouseout', () => layers.forEach(l => l.setStyle({ weight })));
+      blocks.push({ lines: f.geometry.coordinates, centred: p.side === '?', casing, layers });
     }
   }
   lines.addTo(map);
-
-  document.getElementById('legend').insertAdjacentHTML('beforeend',
-    `<div class="row"><span class="line" style="border-color:${color}"></span>District ${d} permit block</div>
-     <div class="row"><span class="area" style="border-color:${color}; background:color-mix(in srgb, ${color} 10%, transparent)"></span>District ${d} boundary</div>`);
-  return data;
+  redraw();
+  document.getElementById('note').textContent =
+    `Unofficial map built from the Parking Authority's published list as of ${data.generated}. That list can be out of date or wrong. Posted signs always win.`;
 }
 
-Promise.all(DISTRICTS.map(loadDistrict)).then(all => {
-  redraw();
-  const pts = all.flatMap(d => d.features.filter(f => f.properties.kind === 'district').flatMap(f => f.geometry.coordinates[0].map(c => [c[1], c[0]])));
-  map.fitBounds(pts, { padding: [10, 10] });
-  document.getElementById('note').textContent =
-    `Unofficial map built from the Parking Authority's published list as of ${all[0].generated}. That list can be out of date or wrong. Posted signs always win.`;
-}).catch(() => {
+load().catch(() => {
   document.getElementById('note').innerHTML =
     '<span class="error">The map data did not load.</span> This page has to be opened from a website such as GitHub Pages. It will not work by double-clicking the file.';
 });
