@@ -21,6 +21,9 @@ list, which can be out of date or wrong.
 - `build/` holds the script that rebuilds the data from the official sources.
 - `build/side-corrections.json` lists blocks drawn on the opposite side from the one the
   Parking Authority gives (see "Known gaps").
+- `checks/east-side-aerial-check.csv` is the block-by-block result of the aerial photo check:
+  for every block listed as "East Side" only, which side the parked cars are on (east, west,
+  both or unclear) and how clear the photo was.
 
 ## Hosting
 

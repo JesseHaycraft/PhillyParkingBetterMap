@@ -1,0 +1,432 @@
+block,district,listed_side,cars_parked_on,confidence
+2400 ALMOND ST,25,east,both,high
+1000 BELMONT AVE,3,east,both,high
+2100 BRYN MAWR AVE,3,east,both,low
+2200 BRYN MAWR AVE,3,east,both,low
+200 COBBS CREEK PKWY,2,east,both,high
+3500 CONRAD ST,8,east,both,high
+3900 CORAL ST,19,east,both,medium
+3700 CRESSON ST,15,east,both,medium
+100 DOCK ST,5,east,both,medium
+1300 E MOYAMENSING AVE,33,east,both,high
+800 E PASSYUNK AVE,7/22,east,both,high
+1300 FRANKFORD AVE,25,east,both,high
+1400 FRANKFORD AVE,25,east,both,medium
+8700 GERMANTOWN AVE,21,east,both,high
+2500 GRAYS FERRY AVE,1,east,both,low
+6000 LIMEKILN PIKE,14,east,both,high
+4100 MAIN ST,15,east,both,medium
+1400 N 13TH ST,30,east,both,medium
+3100 N 13TH ST,13,east,both,high
+5200 N 13TH ST,11,east,both,low
+5700 N 13TH ST,11,east,both,high
+5800 N 13TH ST,11,east,both,medium
+100 N 16TH ST,6,east,both,medium
+400 N 19TH ST,6,east,both,high
+500 N 19TH ST,6,east,both,high
+100 N 20TH ST,6,east,both,high
+400 N 20TH ST,6,east,both,high
+1500 N 20TH ST,17,east,both,high
+5600 N 20TH ST,14,east,both,high
+200 N 21ST ST,6,east,both,medium
+400 N 21ST ST,6,east,both,high
+5700 N 21ST ST,14,east,both,high
+200 N 22ND ST,6,east,both,high
+700 N 22ND ST,6/17,east,both,high
+800 N 23RD ST,17,east,both,high
+3100 N 23RD ST,16,east,both,high
+700 N 26TH ST,6/17,east,both,high
+3100 N 27TH ST,16,east,both,high
+1600 N 28TH ST,17,east,both,high
+300 N 34TH ST,3,east,both,high
+500 N 34TH ST,3,east,both,high
+200 N 35TH ST,3,east,both,high
+300 N 35TH ST,3,east,both,high
+300 N 39TH ST,3,east,both,high
+300 N 3RD ST,10,east,both,medium
+500 N 3RD ST,10,east,both,medium
+600 N 3RD ST,10,east,both,high
+500 N 42ND ST,3,east,both,medium
+500 N 4TH ST,10,east,both,medium
+300 N 5TH ST,10,east,both,medium
+400 N 5TH ST,10,east,both,medium
+500 N 5TH ST,10,east,both,medium
+0 N 62ND ST,2/3,east,both,high
+0 N 63RD ST,2/3,east,both,high
+100 N 63RD ST,3,east,both,medium
+800 N 6TH ST,10,east,both,high
+4400 N 9TH ST,13,east,both,low
+5000 N 9TH ST,11,east,both,high
+800 N BAMBREY ST,17,east,both,medium
+4700 N CARLISLE ST,14,east,both,high
+5100 N CARLISLE ST,14,east,both,high
+5200 N CARLISLE ST,14,east,both,high
+1300 N CREASE ST,25,east,both,medium
+300 N FRONT ST,10,east,both,medium
+400 N FRONT ST,10,east,both,medium
+1100 N HANCOCK ST,10/25,east,both,medium
+1800 N HOWARD ST,38,east,both,high
+2900 N MARSTON ST,16,east,both,low
+3200 N PARK AVE,13,east,both,high
+3300 N PARK AVE,13,east,both,high
+5900 N WARNOCK ST,11,east,both,high
+4700 OLD YORK RD,11,east,both,medium
+4800 OLD YORK RD,11,east,both,high
+500 PELHAM RD,14,east,both,medium
+1200 RIDGE AVE,10,east,both,low
+700 S 11TH ST,22,east,both,high
+800 S 11TH ST,22,east,both,medium
+500 S 12TH ST,4/22,east,both,high
+700 S 12TH ST,22,east,both,high
+1000 S 13TH ST,22,east,both,high
+1100 S 13TH ST,23,east,both,high
+2600 S 13TH ST,24/29,east,both,high
+2700 S 13TH ST,24/29,east,both,high
+2800 S 13TH ST,29,east,both,high
+800 S 15TH ST,1,east,both,high
+1700 S 15TH ST,27,east,both,high
+1900 S 15TH ST,27,east,both,high
+2200 S 16TH ST,27,east,both,high
+700 S 17TH ST,1,east,both,high
+1500 S 17TH ST,26,east,both,high
+800 S 18TH ST,1,east,both,medium
+1100 S 18TH ST,26,east,both,high
+1600 S 18TH ST,26/27,east,both,high
+2200 S 19TH ST,27,east,both,high
+3100 S 20TH ST,28,east,both,low
+3400 S 20TH ST,28,east,both,medium
+200 S 22ND ST,1,east,both,medium
+500 S 23RD ST,1,east,both,medium
+0 S 39TH ST,2/3,east,both,high
+100 S 39TH ST,2,east,both,medium
+600 S 3RD ST,5/7,east,both,high
+200 S 42ND ST,2,east,both,high
+400 S 42ND ST,2,east,both,high
+200 S 43RD ST,2,east,both,high
+600 S 43RD ST,2,east,both,medium
+500 S 45TH ST,2,east,both,medium
+1000 S 45TH ST,2,east,both,high
+1200 S 45TH ST,2,east,both,high
+900 S 46TH ST,2,east,both,high
+200 S 47TH ST,2,east,both,high
+100 S 48TH ST,2,east,both,medium
+300 S 4TH ST,5,east,both,low
+500 S 51ST ST,2,east,both,high
+2100 S 58TH ST,2/3/31,east,both,low
+300 S 5TH ST,5,east,both,medium
+1100 S 6TH ST,23,east,both,high
+3000 S 74TH ST,31,east,both,medium
+300 S 7TH ST,4/5,east,both,medium
+700 S 7TH ST,7/22,east,both,high
+200 S 9TH ST,4/22,east,both,medium
+1900 S 9TH ST,24,east,both,high
+2000 S BANCROFT ST,27,east,both,high
+1000 S BROAD ST,1,east,both,high
+1500 S BROAD ST,23/26,east,both,medium
+2900 S BROAD ST,28/29,east,both,high
+900 S FRONT ST,7,east,both,high
+800 S HUTCHINSON ST,22,east,both,high
+900 S WATER ST,7/33,east,both,medium
+300 SAINT MARKS ST,2,east,both,high
+4100 SALEM ST,12,east,both,medium
+700 SHIRLEY ST,17,east,both,medium
+300 STATE ST,3,east,both,high
+1500 WILLINGTON ST,17,east,both,medium
+1900 WYNNEWOOD RD,3,east,both,medium
+4500 BAKER ST,15,east,east,low
+3400 BARCLAY ST,8,east,east,medium
+4000 BOONE ST,15,east,east,high
+2000 DORRANCE ST,27,east,east,high
+1100 DUNTON ST,10,east,east,high
+1300 E PALMER ST,25,east,east,high
+1100 EARL ST,10/25,east,east,high
+100 FOUNTAIN ST,15,east,east,low
+900 FRANKFORD AVE,10,east,east,medium
+2400 GRAYS FERRY AVE,1,east,east,high
+3500 HENRY AVE,8,east,east,medium
+3100 HURLEY ST,39,east,east,medium
+3500 K ST,39,east,east,high
+5700 KNOX ST,14,east,east,high
+3900 MANAYUNK AVE,15,east,east,low
+3800 MANOR ST,15,east,east,medium
+3900 MANOR ST,15,east,east,high
+300 N 13TH ST,10,east,east,low
+5600 N 16TH ST,14,east,east,high
+200 N 23RD ST,6,east,east,high
+400 N 3RD ST,10,east,east,medium
+2200 N 59TH ST,3,east,east,medium
+800 N BEECHWOOD ST,17,east,east,high
+1400 N BOUVIER ST,17,east,east,high
+1500 N BOUVIER ST,17,east,east,medium
+1600 N BOUVIER ST,17,east,east,high
+1700 N BOUVIER ST,9/17,east,east,medium
+1800 N BOUVIER ST,9,east,east,high
+800 N CAPITOL ST,17,east,east,high
+2000 N CARLISLE ST,9,east,east,high
+3200 N CARLISLE ST,16,east,east,high
+1100 N CREASE ST,10/25,east,east,high
+1200 N CREASE ST,10/25,east,east,medium
+0 N DEWEY ST,3,east,east,high
+1600 N DOVER ST,17,east,east,high
+0 N EDGEWOOD ST,2/3,east,east,high
+4400 N FRANKLIN ST,13,east,east,high
+0 N FRAZIER ST,2/3,east,east,high
+4400 N GREENE ST,14,east,east,high
+100 N GROSS ST,3,east,east,high
+1300 N HOBART ST,3,east,east,medium
+800 N LAWRENCE ST,10,east,east,high
+1200 N LAWRENCE ST,10/25/30,east,east,high
+1000 N LEITHGOW ST,10,east,east,high
+0 N LINDENWOOD ST,2/3,east,east,high
+100 N LINDENWOOD ST,3,east,east,medium
+200 N NATRONA ST,3,east,east,medium
+500 N NATRONA ST,3,east,east,medium
+900 N ORIANNA ST,10,east,east,high
+1000 N ORIANNA ST,10,east,east,medium
+1100 N ORIANNA ST,10/25,east,east,medium
+1200 N PALETHORP ST,10/25,east,east,medium
+3100 N PARK AVE,13,east,east,medium
+0 N REDFIELD ST,3,east,east,high
+700 N TAYLOR ST,17,east,east,medium
+3400 OSMOND ST,8,east,east,medium
+300 S 11TH ST,4,east,east,high
+400 S 11TH ST,4,east,east,high
+500 S 11TH ST,4/22,east,east,medium
+200 S 13TH ST,1/4,east,east,medium
+300 S 13TH ST,1/4,east,east,high
+400 S 13TH ST,1/4,east,east,medium
+500 S 13TH ST,1/4,east,east,high
+2100 S 13TH ST,24,east,east,medium
+2500 S 16TH ST,27,east,east,high
+300 S 18TH ST,1,east,east,high
+400 S 18TH ST,1,east,east,medium
+200 S 19TH ST,1,east,east,low
+300 S 19TH ST,1,east,east,medium
+400 S 19TH ST,1,east,east,high
+200 S 21ST ST,1,east,east,medium
+300 S 21ST ST,1,east,east,high
+400 S 21ST ST,1,east,east,high
+500 S 21ST ST,1,east,east,medium
+300 S 22ND ST,1,east,east,high
+400 S 22ND ST,1,east,east,medium
+500 S 22ND ST,1,east,east,medium
+200 S 23RD ST,1,east,east,medium
+300 S 23RD ST,1,east,east,high
+400 S 23RD ST,1,east,east,high
+600 S 26TH ST,1,east,east,high
+500 S 27TH ST,1,east,east,high
+200 S 3RD ST,5,east,east,high
+300 S 3RD ST,5,east,east,high
+400 S 3RD ST,5,east,east,medium
+1900 S 3RD ST,34,east,east,medium
+1100 S 49TH ST,2,east,east,low
+200 S 4TH ST,5,east,east,medium
+200 S 5TH ST,5,east,east,medium
+400 S 5TH ST,5,east,east,high
+400 S 7TH ST,4/5,east,east,low
+500 S 7TH ST,4/5,east,east,medium
+400 S 9TH ST,4,east,east,high
+500 S 9TH ST,4/22,east,east,high
+2700 S BEULAH ST,24/29,east,east,high
+1400 S BROAD ST,23/26,east,east,high
+2800 S CAMAC ST,29,east,east,high
+1400 S CARLISLE ST,26,east,east,high
+1500 S CARLISLE ST,26,east,east,high
+1800 S CARLISLE ST,27,east,east,medium
+2100 S CHADWICK ST,27,east,east,high
+2200 S CHADWICK ST,27,east,east,high
+1300 S CLARION ST,23,east,east,medium
+1400 S CLARION ST,23,east,east,high
+1000 S COLORADO ST,1,east,east,high
+2000 S COLORADO ST,27,east,east,high
+0 S FALLON ST,2/3,east,east,medium
+1000 S FARRAGUT TER,2,east,east,medium
+1500 S FRANKLIN ST,23,east,east,high
+300 S FRAZIER ST,2,east,east,medium
+2000 S GARNET ST,27,east,east,medium
+1600 S HICKS ST,26,east,east,high
+1700 S HICKS ST,27,east,east,high
+2100 S HICKS ST,27,east,east,high
+2200 S HICKS ST,27,east,east,high
+2300 S HICKS ST,27,east,east,low
+2600 S HICKS ST,27,east,east,high
+700 S HUTCHINSON ST,22,east,east,high
+1600 S ISEMINGER ST,23/24,east,east,high
+1700 S ISEMINGER ST,23/24,east,east,high
+700 S JUNIPER ST,22,east,east,high
+1800 S JUNIPER ST,24,east,east,medium
+1200 S MARSHALL ST,23,east,east,medium
+700 S MARVINE ST,22,east,east,low
+200 S MELVILLE ST,2,east,east,high
+1300 S MELVILLE ST,2,east,east,high
+2100 S MOLE ST,26/27,east,east,high
+1500 S MYRTLEWOOD ST,26,east,east,high
+100 S REDFIELD ST,2,east,east,medium
+2100 S ROSEWOOD ST,27,east,east,high
+2200 S ROSEWOOD ST,27,east,east,medium
+2300 S ROSEWOOD ST,27,east,east,medium
+2400 S ROSEWOOD ST,27,east,east,high
+2500 S ROSEWOOD ST,27,east,east,high
+2600 S ROSEWOOD ST,27,east,east,medium
+1800 S SARTAIN ST,24,east,east,high
+1900 S SARTAIN ST,24,east,east,high
+400 S VAN PELT ST,1,east,east,high
+700 S WARNOCK ST,22,east,east,low
+1800 S WATTS ST,24,east,east,low
+2400 S WATTS ST,24,east,east,high
+2600 S WATTS ST,24/29,east,east,high
+500 S YEWDALL ST,2,east,east,high
+5200 SAUL ST,12,east,east,medium
+8100 SHAWNEE ST,21,east,east,medium
+3600 STOKLEY ST,8,east,east,high
+1800 WILLINGTON ST,9,east,east,high
+300 WIOTA ST,3,east,east,high
+2400 N 52ND ST,3,east,unclear,low
+100 N HUTCHINSON ST,10,east,unclear,high
+1000 N MARLBOROUGH ST,10,east,unclear,low
+500 RANDOLPH CT,5/7,east,unclear,low
+200 S 2ND ST,5,east,unclear,low
+500 S 3RD ST,5/7,east,unclear,medium
+2400 S CAMAC ST,24,east,unclear,medium
+2400 S CLARION ST,24,east,unclear,high
+2600 S ISEMINGER ST,24/29,east,unclear,low
+200 S VAN PELT ST,1,east,unclear,high
+100 BETHLEHEM PIKE,21,east,west,low
+300 BUDD ST,3,east,west,high
+1200 DAY ST,10/25,east,west,high
+4300 DEXTER ST,15,east,west,high
+1300 E EYRE ST,25,east,west,high
+3400 HENRY AVE,8,east,west,medium
+3800 LAURISTON ST,15,east,west,medium
+1100 LEOPARD ST,10/25,east,west,medium
+100 N 15TH ST,6,east,west,low
+200 N 15TH ST,6,east,west,medium
+500 N 15TH ST,6,east,west,medium
+5600 N 18TH ST,14,east,west,medium
+300 N 19TH ST,6,east,west,high
+100 N 21ST ST,6,east,west,medium
+100 N 23RD ST,6,east,west,medium
+400 N 2ND ST,10,east,west,medium
+500 N 2ND ST,10,east,west,high
+400 N 31ST ST,3,east,west,high
+300 N 4TH ST,10,east,west,high
+400 N 4TH ST,10,east,west,low
+300 N 59TH ST,3,east,west,high
+600 N AMERICAN ST,10,east,west,high
+200 N CAMAC ST,10,east,west,high
+700 N CROSKEY ST,17,east,west,high
+1100 N DAY ST,10/25,east,west,high
+500 N DOUGLAS ST,3,east,west,low
+0 N FELTON ST,2/3,east,west,high
+0 N FRONT ST,10,east,west,high
+2000 N GRATZ ST,9,east,west,high
+0 N HIRST ST,2/3,east,west,high
+500 N HOLLY ST,1/3,east,west,low
+3500 N HOPE ST,38,east,west,high
+5200 N HOWARD ST,18,east,west,high
+0 N ITHAN ST,2/3,east,west,medium
+5700 N LAMBERT ST,14,east,west,high
+900 N LAWRENCE ST,10,east,west,high
+4800 N LAWRENCE ST,18,east,west,high
+700 N LECOUNT ST,17,east,west,medium
+0 N MILLICK ST,2/3,east,west,high
+1200 N NEWKIRK ST,17,east,west,medium
+5800 N PARK AVE,11,east,west,high
+900 N RANDOLPH ST,10,east,west,high
+0 N ROBINSON ST,3,east,west,high
+0 N SALFORD ST,2/3,east,west,high
+300 N SLOAN ST,3,east,west,high
+400 N SLOAN ST,3,east,west,high
+1700 N SYDENHAM ST,9/17,east,west,high
+5600 N SYDENHAM ST,14,east,west,high
+800 N TAYLOR ST,17,east,west,medium
+700 N UBER ST,6/17,east,west,high
+800 N UBER ST,17,east,west,high
+2800 N WATTS ST,30,east,west,high
+300 RICHMOND ST,10,east,west,high
+300 S 10TH ST,4,east,west,high
+400 S 10TH ST,4,east,west,medium
+300 S 12TH ST,4,east,west,high
+400 S 15TH ST,1/4,east,west,high
+500 S 15TH ST,1/4,east,west,medium
+300 S 16TH ST,1,east,west,medium
+400 S 16TH ST,1,east,west,high
+300 S 17TH ST,1,east,west,high
+200 S 20TH ST,1,east,west,medium
+300 S 20TH ST,1,east,west,high
+500 S 20TH ST,1,east,west,medium
+400 S 26TH ST,1,east,west,medium
+300 S 6TH ST,4/5,east,west,high
+400 S 6TH ST,4/5,east,west,high
+400 S 8TH ST,4,east,west,high
+500 S 8TH ST,4/22,east,west,medium
+2700 S 8TH ST,24/29,east,west,high
+2800 S ALDER ST,29,east,west,medium
+600 S AMERICAN ST,5/7,east,west,high
+700 S AMERICAN ST,7,east,west,low
+600 S BAMBREY ST,1,east,west,medium
+1600 S BANCROFT ST,26/27,east,west,high
+2200 S BANCROFT ST,27,east,west,medium
+2000 S BOUVIER ST,27,east,west,medium
+1200 S BUCKNELL ST,26,east,west,medium
+300 S CAMAC ST,4,east,west,high
+1600 S CAMAC ST,23/24,east,west,medium
+1800 S CAMAC ST,24,east,west,high
+1900 S CAMAC ST,24,east,west,low
+2500 S CAMAC ST,24,east,west,high
+2600 S CAMAC ST,24/29,east,west,high
+1100 S CARLISLE ST,26,east,west,medium
+1300 S CARLISLE ST,26,east,west,high
+2100 S CARLISLE ST,27,east,west,high
+2200 S CARLISLE ST,27,east,west,high
+2300 S CARLISLE ST,27,east,west,high
+2500 S CARLISLE ST,27,east,west,medium
+2600 S CARLISLE ST,27,east,west,high
+1000 S CHADWICK ST,1,east,west,high
+1100 S CLARION ST,23,east,west,high
+1600 S CLARION ST,23/24,east,west,medium
+2200 S CLARION ST,24,east,west,high
+2500 S CLARION ST,24,east,west,low
+700 S CLEVELAND ST,1,east,west,high
+1000 S CLEVELAND ST,1/26,east,west,medium
+1500 S CLEVELAND ST,26,east,west,high
+600 S CLIFTON ST,22,east,west,high
+700 S DARIEN ST,22,east,west,medium
+700 S DORRANCE ST,1,east,west,high
+300 S FRONT ST,5,east,west,medium
+1300 S GARNET ST,26,east,west,high
+1500 S ISEMINGER ST,23,east,west,high
+1900 S ISEMINGER ST,24,east,west,high
+2400 S ISEMINGER ST,24,east,west,low
+2700 S ISEMINGER ST,24/29,east,west,high
+2800 S ISEMINGER ST,29,east,west,high
+1900 S JESSUP ST,24,east,west,low
+1900 S JUNIPER ST,24,east,west,medium
+2200 S JUNIPER ST,24,east,west,high
+2400 S JUNIPER ST,24,east,west,medium
+2500 S JUNIPER ST,24,east,west,medium
+2600 S JUNIPER ST,24/29,east,west,high
+1900 S LAMBERT ST,27,east,west,high
+400 S LECOUNT ST,1,east,west,high
+600 S LECOUNT ST,1,east,west,high
+1100 S MOLE ST,26,east,west,high
+1500 S MOLE ST,26,east,west,high
+1800 S MOLE ST,27,east,west,high
+1900 S MOLE ST,27,east,west,high
+2300 S MOLE ST,27,east,west,high
+1500 S OPAL ST,26,east,west,medium
+1600 S ROSEWOOD ST,26,east,west,medium
+1800 S ROSEWOOD ST,27,east,west,low
+0 S RUBY ST,2,east,west,high
+1300 S RUBY ST,2,east,west,high
+100 S SALFORD ST,2,east,west,high
+1200 S SHERIDAN ST,23,east,west,medium
+700 S SMEDLEY ST,1,east,west,high
+1900 S WARNOCK ST,24,east,west,low
+2500 S WATTS ST,24,east,west,high
+1900 S WOODSTOCK ST,27,east,west,high
+3200 SCOTTS LN,8,east,west,low
+4500 SMICK ST,15,east,west,high
+2200 TAGGERT ST,25,east,west,high
+4800 UMBRIA ST,15,east,west,medium
+1700 WILLINGTON ST,9/17,east,west,high
