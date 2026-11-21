@@ -19,6 +19,8 @@ list, which can be out of date or wrong.
 - `index.html` is the whole map page (Leaflet + OpenStreetMap).
 - `data/parking.geojson` is the map data: the district outlines and one line per block side.
 - `build/` holds the script that rebuilds the data from the official sources.
+- `build/side-corrections.json` lists blocks drawn on the opposite side from the one the
+  Parking Authority gives (see "Known gaps").
 
 ## Hosting
 
@@ -47,8 +49,15 @@ It prints a report listing any blocks it could not place.
 - A few blocks are listed with a side that does not fit the street (for example the
   "east side" of an east-west street). Those are drawn down the middle of the street.
 
+- The Parking Authority lists about 430 north-south blocks as "East Side" only and almost
+  none as "West Side" only. Checked against the City's 2025 aerial photos, the parked cars
+  are on the west side about as often as the east. The 126 clearest cases are drawn on the
+  west side, with a note in the popup. Blocks where cars park on both sides, or where the
+  photo is unclear, are still drawn as listed, so the side can be wrong there.
+
 ## Sources
 
 - Philadelphia Parking Authority, "Residential Parking Districts & Permit Streets" map
 - City of Philadelphia, Street Centerlines (OpenDataPhilly)
+- City of Philadelphia, 2025 aerial imagery (used only to check which side cars park on)
 - Base map © OpenStreetMap contributors

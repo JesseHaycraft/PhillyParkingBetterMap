@@ -140,11 +140,19 @@ function furtherRight(s, o) {
 
 // ---------- The build ----------
 
-export function buildAll(kml, centerlines) {
+// corrections: the contents of side-corrections.json (blocks where the listed side is known to be wrong)
+export function buildAll(kml, centerlines, corrections = {}) {
   const report = {
     entries: 0, blocks: 0, lines: 0, perDistrict: {},
     lots: [], unparsed: [], unmatched: [], renamed: [], farFromDistrict: [], moved: [], sideUnclear: [], mixedRules: [],
+    sideCorrected: [], correctionsUnused: [],
   };
+  // block name -> the districts it is corrected in
+  const eastToWest = new Map();
+  for (const item of corrections.eastToWest || []) {
+    const [name, list] = item.split('|');
+    eastToWest.set(name, { districts: list.split('/').map(Number), used: false });
+  }
 
   // 1. Read the Parking Authority file: district outlines and block entries
   const text = s => s.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/&amp;/g, '&').trim();
@@ -260,8 +268,16 @@ export function buildAll(kml, centerlines) {
     }
     if (wanted.has('?')) { wanted.clear(); wanted.add('?'); report.sideUnclear.push(label + ' ("' + [...new Set(g.entries.map(e => e.sideText))].join('", "') + '")'); }
 
+    // A block listed as East Side only, where the corrections file says the parking is on the west side
+    let listedSide = null;
+    const fix = eastToWest.get(label);
+    if (fix && wanted.size === 1 && wanted.has('E') && districts.some(d => fix.districts.includes(d))) {
+      wanted.clear(); wanted.add('W'); listedSide = 'E'; fix.used = true;
+      report.sideCorrected.push(label);
+    }
+
     for (const side of wanted) {
-      const entries = g.entries.filter(e => side === '?' || e.side === 'B' || e.side === side);
+      const entries = g.entries.filter(e => side === '?' || listedSide || e.side === 'B' || e.side === side);
       let lines;
       if (side === '?') {
         lines = segs;      // drawn down the middle of the street
@@ -281,6 +297,7 @@ export function buildAll(kml, centerlines) {
       const props = blocks.get(key).properties;
       for (const d of districts) if (!props.districts.includes(d)) props.districts.push(d);
       if (listedAs) props.listedAs = listedAs;
+      if (listedSide) props.listedSide = listedSide;
       props.districts.sort((a, b) => a - b);
       for (const e of entries) if (!props.rules.some(r => r.limit === e.limit && r.hours === e.hours)) props.rules.push({ limit: e.limit, hours: e.hours });
       if (side === '?') props.sideText = [...new Set(g.entries.map(e => e.sideText))].join(' / ');
@@ -313,6 +330,7 @@ export function buildAll(kml, centerlines) {
     if (f.properties.rules.length > 1) report.mixedRules.push(f.properties.block + ' ' + f.properties.side);
     for (const d of f.properties.districts) report.perDistrict[d] = (report.perDistrict[d] || 0) + 1;
   }
+  for (const [name, fix] of eastToWest) if (!fix.used) report.correctionsUnused.push(name);
   report.blocks = groups.size;
   report.lines = sorted.length;
   return { geojson: { type: 'FeatureCollection', features }, report };

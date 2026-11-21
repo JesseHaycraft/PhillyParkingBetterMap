@@ -1,7 +1,10 @@
 // Rebuilds data/parking.geojson (every district) from the official sources.
 // Usage (needs Node 18 or newer):   node build/build.mjs
-import { writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { buildAll } from './pipeline.mjs';
+
+// Blocks where the listed side is known to be wrong (see the "about" line inside the file)
+const corrections = JSON.parse(await readFile(new URL('./side-corrections.json', import.meta.url), 'utf8'));
 
 // PPA "Residential Parking Districts & Permit Streets" map, exported as KML
 const KML_URL = 'https://www.google.com/maps/d/kml?mid=1c89qjwKU8xqE58aZdTUCaUfrY9PwwJ0&forcekml=1';
@@ -22,7 +25,7 @@ for (;;) {
   streets = streets.concat(page);
 }
 
-const { geojson, report } = buildAll(kml, streets);
+const { geojson, report } = buildAll(kml, streets, corrections);
 
 // The report: anything listed here is worth a look
 console.log(`\n${report.entries} entries in the Parking Authority list -> ${report.blocks} blocks -> ${report.lines} lines on the map`);
@@ -36,12 +39,14 @@ const sections = {
   farFromDistrict: 'Blocks well outside their district outline (kept as listed)',
   sideUnclear: 'Blocks whose stated side does not fit the street (drawn down the middle)',
   mixedRules: 'Block sides with more than one set of rules',
+  correctionsUnused: 'Entries in side-corrections.json that no longer match a block listed as East Side only',
 };
+console.log(`Blocks moved from the east side to the west side by side-corrections.json: ${report.sideCorrected.length}`);
 for (const [key, title] of Object.entries(sections)) {
   if (report[key].length) console.log(`\n${title} (${report[key].length}):\n  ` + report[key].join('\n  '));
 }
 
-const out = { type: 'FeatureCollection', generated: new Date().toISOString().slice(0, 10),
+const out = { type: 'FeatureCollection', generated: new Date().toLocaleDateString('en-CA'),   // today's date here, as 2026-01-31
   source: 'Philadelphia Parking Authority "Residential Parking Districts & Permit Streets" map + City of Philadelphia Street Centerlines',
   features: geojson.features };
 await mkdir('data', { recursive: true });

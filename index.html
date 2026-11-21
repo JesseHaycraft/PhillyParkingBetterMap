@@ -85,6 +85,7 @@ function popupHtml(p) {
   let warn = '';
   if (p.rules.length > 1) warn += `<div class="pop-warn">The Parking Authority lists ${p.rules.length} different rules for this block and doesn't say which stretch each one covers. Check the signs.</div>`;
   if (p.side === '?') warn += `<div class="pop-warn">The Parking Authority lists this as "${titleCase(p.sideText)}", which doesn't fit the way this street runs, so the line is drawn down the middle. Check the signs.</div>`;
+  if (p.listedSide) warn += `<div class="pop-warn">The Parking Authority lists this as the ${SIDE[p.listedSide].toLowerCase()}. City aerial photos from 2025 show cars parked only on the ${SIDE[p.side].toLowerCase()}, so the line is drawn there. Check the signs.</div>`;
   if (p.listedAs) warn += `<div class="pop-warn">The Parking Authority lists this block under District ${list(p.listedAs, 'and')}, which is far from here. It is shown as District ${list(d, 'and')} because of where it is. Check the signs.</div>`;
   return `<div class="pop-title">${blockLabel(p.block)}</div>
     <div class="pop-sub">${SIDE[p.side]} · District${d.length > 1 ? 's' : ''} ${list(d, 'and')}</div>
