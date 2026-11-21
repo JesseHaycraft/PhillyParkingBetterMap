@@ -342,7 +342,6 @@ export function buildAll(kml, centerlines, corrections = {}) {
 //   o: [lon, lat] of the south-west corner; all positions are whole steps of 0.00001 degrees from it
 //   n: corners, as x, y, x, y, ...
 //   e: street pieces, as cornerA, cornerB, metres, ...
-//   g: for a piece that bends, the points between its two corners (piece number -> x, y, x, y, ...)
 export function buildWalk(centerlines) {
   // Not for walking: expressways (class 1; Roosevelt Blvd is class 1 too but has sidewalks),
   // their ramps (9, 10) and the city boundary line (14)
@@ -351,20 +350,7 @@ export function buildWalk(centerlines) {
   const lon0 = Math.min(...lines.map(l => Math.min(...l.map(c => c[0])))), lat0 = Math.min(...lines.map(l => Math.min(...l.map(c => c[1]))));
   const step = c => [Math.round((c[0] - lon0) * 1e5), Math.round((c[1] - lat0) * 1e5)];
 
-  // drop points that sit within 3 m of the straight line between their neighbours
-  function simplify(pts) {
-    if (pts.length < 3) return pts;
-    const a = pts[0], b = pts[pts.length - 1], dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
-    let worst = 0, at = 0;
-    for (let i = 1; i < pts.length - 1; i++) {
-      const d = Math.abs((pts[i][0] - a[0]) * dy - (pts[i][1] - a[1]) * dx) / len;
-      if (d > worst) { worst = d; at = i; }
-    }
-    if (worst <= 3) return [a, b];
-    return simplify(pts.slice(0, at + 1)).slice(0, -1).concat(simplify(pts.slice(at)));
-  }
-
-  const corner = new Map(), n = [], e = [], g = {};
+  const corner = new Map(), n = [], e = [];
   const cornerId = c => { const s = step(c), k = s[0] + ',' + s[1]; if (!corner.has(k)) { corner.set(k, n.length / 2); n.push(s[0], s[1]); } return corner.get(k); };
   for (const line of lines) {
     const m = line.map(toM);
@@ -372,9 +358,7 @@ export function buildWalk(centerlines) {
     for (let i = 1; i < m.length; i++) metres += Math.hypot(m[i][0] - m[i - 1][0], m[i][1] - m[i - 1][1]);
     const a = cornerId(line[0]), b = cornerId(line[line.length - 1]);
     if (a === b) continue;                       // a loop back to the same corner adds nothing
-    const kept = simplify(m).slice(1, -1).map(toLL).map(step);
-    if (kept.length) g[e.length / 3] = kept.flat();
     e.push(a, b, Math.max(1, Math.round(metres)));
   }
-  return { o: [lon0, lat0], n, e, g };
+  return { o: [lon0, lat0], n, e };
 }
