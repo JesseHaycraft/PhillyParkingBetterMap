@@ -1,82 +1,51 @@
 # Philly Permit Parking Map
 
-An unofficial map of Philadelphia residential permit parking blocks. Each permit
-block is drawn as a line on the side of the street where the permit applies,
-coloured by district. Covers every district the Parking Authority publishes.
+An unofficial map of Philadelphia's residential permit parking. The Parking Authority's
+map marks each permit block with a pin. This one draws a line along the side of the
+street where the permit applies, coloured by district.
 
-**Posted signs always win.** The data comes from the Parking Authority's published
-list, which can be out of date or wrong.
+Live map: https://jessehaycraft.github.io/PhillyParkingBetterMap/
 
-## Reading the map
+**Posted signs always win.** The data comes from the Parking Authority's published list,
+which has mistakes and can be out of date.
 
-- A solid line is a permit block. Its colour shows the district.
-- A line with two alternating colours is a block shared by two districts.
-- A dashed outline is a district boundary. These are approximate.
-- Tap a line for the time limit and hours that apply to cars without a permit.
+## Using it
 
-## Walk times
+- Tap a line for the time limit and hours that apply without a permit.
+- A two-colour line is a block shared by two districts. Dashed outlines are district
+  boundaries, roughly.
+- "Walk times" colours one district's blocks by how far they are on foot from an address,
+  your location or a spot you tap, up to 20 minutes. A typed address is looked up through
+  OpenStreetMap's Nominatim. Your location and tapped spots stay in your browser.
 
-The "Walk times" panel colours the permit blocks of one district by how long the walk is
-from a starting point, up to 20 minutes, in 5-minute steps (at about 3 mph). Other districts
-and anything further away turn grey.
+## Things to know
 
-- Set the start by typing an address, by using your location, or by tapping the map.
-- The district is guessed from the starting point and can be changed in the panel.
-- Walking distances follow the street network and are worked out in your browser.
-  A typed address is sent to OpenStreetMap's Nominatim service to find it; your location
-  or a tapped point is not sent anywhere.
+- The list only gives whole blocks, so a line runs the full block even where the signs
+  cover part of it.
+- "East Side" in the list is unreliable. Going by the City's 2025 aerial photos, 126 of
+  those blocks clearly have cars only on the west side, so they are drawn there
+  (`build/side-corrections.json`, full results in `checks/`). Others may still be on the
+  wrong side.
+- A few listed blocks couldn't be matched to a street and aren't drawn. Permit lots
+  aren't drawn either.
+- Walk times assume about 3 mph along the City's street network. No hills, no waiting
+  at lights.
 
-## Files
+## Running it
 
-- `index.html` is the whole map page (Leaflet + OpenStreetMap).
-- `data/parking.geojson` is the map data: the district outlines and one line per block side.
-- `data/walk.json` is the street network used for walk times (loaded only when needed).
-- `build/` holds the script that rebuilds the data from the official sources.
-- `build/side-corrections.json` lists blocks drawn on the opposite side from the one the
-  Parking Authority gives (see "Known gaps").
-- `checks/east-side-aerial-check.csv` is the block-by-block result of the aerial photo check:
-  for every block listed as "East Side" only, which side the parked cars are on (east, west,
-  both or unclear) and how clear the photo was.
+It's plain static files. Opening `index.html` directly won't load the data, so serve the
+folder instead:
 
-## Hosting
+    python -m http.server 8000
 
-The site is plain static files, served by GitHub Pages from the `main` branch root:
-https://jessehaycraft.github.io/PhillyParkingBetterMap/
-
-The page must be opened from a web server. Double-clicking `index.html` will not load the data.
-To preview locally, run `python -m http.server 8000` in this folder and open http://localhost:8000.
-
-## Refreshing the data
-
-Needs Node 18 or newer:
+To rebuild the data from the sources (Node 18 or newer, takes about a minute):
 
     node build/build.mjs
 
-This downloads the Parking Authority map and the City's Street Centerlines, matches
-each permit block to its street segments, and rewrites `data/parking.geojson` and `data/walk.json`.
-It prints a report listing any blocks it could not place.
-
-## Known gaps
-
-- The Parking Authority lists whole blocks only, so a line covers the full block even
-  where the signs cover part of it.
-- A handful of listed blocks have no matching street segment and are not drawn.
-  Permit parking lots are not drawn either. The build report names them.
-- A few blocks are listed with a side that does not fit the street (for example the
-  "east side" of an east-west street). Those are drawn down the middle of the street.
-- The Parking Authority lists about 430 north-south blocks as "East Side" only and almost
-  none as "West Side" only. Checked against the City's 2025 aerial photos, the parked cars
-  are on the west side about as often as the east. The 126 clearest cases are drawn on the
-  west side, with a note in the popup. Blocks where cars park on both sides, or where the
-  photo is unclear, are still drawn as listed, so the side can be wrong there.
-- Walk times treat every street, trail and walkway in the City's street file as walkable
-  (expressways and their ramps are left out). They ignore hills, waits at lights, and
-  shortcuts the City's file does not include. Checked against an OpenStreetMap walking
-  router on 12 routes, they were within about a minute.
+That rewrites the two files in `data/` and prints any blocks it couldn't place.
 
 ## Sources
 
 - Philadelphia Parking Authority, "Residential Parking Districts & Permit Streets" map
-- City of Philadelphia, Street Centerlines (OpenDataPhilly)
-- City of Philadelphia, 2025 aerial imagery (used only to check which side cars park on)
+- City of Philadelphia, Street Centerlines and 2025 aerial imagery
 - Base map and address search © OpenStreetMap contributors
