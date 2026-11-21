@@ -1,7 +1,8 @@
-// Rebuilds data/parking.geojson (every district) from the official sources.
+// Rebuilds data/parking.geojson (every district) and data/walk.json (the walking network)
+// from the official sources.
 // Usage (needs Node 18 or newer):   node build/build.mjs
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { buildAll } from './pipeline.mjs';
+import { buildAll, buildWalk } from './pipeline.mjs';
 
 // Blocks where the listed side is known to be wrong (see the "about" line inside the file)
 const corrections = JSON.parse(await readFile(new URL('./side-corrections.json', import.meta.url), 'utf8'));
@@ -18,7 +19,7 @@ const kml = await (await fetch(KML_URL)).text();
 console.log('Downloading the street centerlines (about 41,000 segments)...');
 let streets = [];
 for (;;) {
-  const url = STREETS_URL + '?where=1%3D1&outFields=pre_dir,st_name,st_type,l_hundred,r_hundred,seg_id&outSR=4326&f=geojson'
+  const url = STREETS_URL + '?where=1%3D1&outFields=pre_dir,st_name,st_type,l_hundred,r_hundred,seg_id,class&outSR=4326&f=geojson'
     + '&orderByFields=seg_id&resultRecordCount=2000&resultOffset=' + streets.length;
   const page = (await (await fetch(url)).json()).features || [];
   if (!page.length) break;
@@ -52,3 +53,8 @@ const out = { type: 'FeatureCollection', generated: new Date().toLocaleDateStrin
 await mkdir('data', { recursive: true });
 await writeFile('data/parking.geojson', JSON.stringify(out).replace(/\{"type":"Feature"/g, '\n{"type":"Feature"').replace(/\]\}$/, '\n]}'));
 console.log(`\nWrote data/parking.geojson`);
+
+// The street network for the walk-time view
+const walk = buildWalk(streets);
+await writeFile('data/walk.json', JSON.stringify(walk));
+console.log(`Wrote data/walk.json: ${walk.n.length / 2} corners, ${walk.e.length / 3} street pieces`);

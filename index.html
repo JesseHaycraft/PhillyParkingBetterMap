@@ -33,6 +33,24 @@
   .pop-sub { color: #59636e; margin-bottom: 6px; }
   .pop-rule { margin-top: 4px; }
   .pop-warn { margin-top: 8px; color: #8a4b00; font-size: 12.5px; }
+  .pop-walk { margin-top: 6px; font-weight: 600; }
+
+  /* Walk-time panel */
+  .walk { width: 226px; }
+  .walk form, .walk .btns { display: flex; gap: 6px; margin-top: 8px; }
+  .walk input[type=text] { flex: 1; min-width: 0; font: inherit; padding: 6px 8px; border: 1px solid #b7bdc3; border-radius: 6px; }
+  .walk button { font: inherit; font-size: 13px; padding: 6px 9px; border: 1px solid #b7bdc3; border-radius: 6px; background: #f6f8fa; color: inherit; cursor: pointer; }
+  .walk .btns button { flex: 1; }
+  .walk button.on { background: #1c5cab; border-color: #1c5cab; color: #fff; }
+  .walk select { font: inherit; padding: 3px 4px; }
+  .walk .scale { display: flex; margin-top: 10px; }
+  .walk .scale span { flex: 1; height: 8px; }
+  .walk .ticks { display: flex; justify-content: space-between; font-size: 12px; color: #59636e; }
+  .walk .mini { display: inline-flex; align-items: center; margin-left: 8px; font-size: 12px; font-weight: 400; color: #59636e; vertical-align: middle; }
+  .walk .mini span { width: 13px; height: 8px; }
+  .walk .mini b { font-weight: 400; margin: 0 4px; }
+  .walk[open] .mini { display: none; }   /* the open panel shows the full colour key instead */
+  .picking, .picking .leaflet-interactive { cursor: crosshair !important; }
 </style>
 </head>
 <body>
@@ -71,6 +89,30 @@ card.onAdd = () => {
 };
 card.addTo(map);
 
+// ---------- Walk-time panel ----------
+const walkPanel = L.control({ position: 'topleft' });
+walkPanel.onAdd = () => {
+  const el = L.DomUtil.create('details', 'card walk');
+  el.open = window.innerWidth > 600;
+  const chips = ['#0d366b', '#1c5cab', '#3987e5', '#86b6ef'].map(c => `<span style="background:${c}"></span>`).join('');
+  el.innerHTML = `<summary>Walk times<span class="mini" id="wmini" hidden><b>0</b>${chips}<b>20 min</b></span></summary>
+    <form id="wform"><input id="waddr" type="text" placeholder="Address, e.g. 1400 Bainbridge St" aria-label="Starting address" autocomplete="street-address"><button>Go</button></form>
+    <div class="btns"><button type="button" id="wloc">My location</button><button type="button" id="wpick">Pick on map</button></div>
+    <p class="fine" id="wmsg"></p>
+    <div id="wresult" hidden>
+      <div class="row"><label for="wdist">Permit district</label><select id="wdist"></select></div>
+      <div class="scale">${chips}</div>
+      <div class="ticks"><span>0</span><span>5</span><span>10</span><span>15</span><span>20 min</span></div>
+      <p class="fine">Grey lines are other districts, or more than 20 minutes away.</p>
+      <label class="row"><input type="checkbox" id="wstreets" checked>Shade the streets too</label>
+      <div class="btns"><button type="button" id="wclear">Clear</button></div>
+    </div>`;
+  L.DomEvent.disableClickPropagation(el);
+  L.DomEvent.disableScrollPropagation(el);
+  return el;
+};
+walkPanel.addTo(map);
+
 // ---------- Text helpers ----------
 const SIDE = { N: 'North side', S: 'South side', E: 'East side', W: 'West side', '?': 'Side not clear' };
 const titleCase = s => s.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase()).replace(/\bMc ([A-Z])/g, 'Mc$1');
@@ -79,8 +121,11 @@ const limitLabel = l => l.split('&').map(x => x.trim().replace(/^(\d+)\s*HR$/, '
 const hoursLabel = h => h.replace(/-/g, '–').replace(/\b(MON|TUE|WED|THUR?|FRI|SAT|SUN)\b/g, d => d[0] + d.slice(1).toLowerCase());
 const list = (a, word) => a.length > 1 ? a.slice(0, -1).join(', ') + ` ${word} ` + a[a.length - 1] : String(a[0]);
 
-function popupHtml(p) {
+function popupHtml(p, block) {
   const d = p.districts;
+  const walkLine = walk && block ? `<div class="pop-walk">${block.walkMetres < LIMIT
+    ? 'About ' + Math.max(1, Math.round(block.walkMetres / METRES_PER_MIN)) + ' min walk from your starting point'
+    : 'More than 20 min walk from your starting point'}</div>` : '';
   const rules = p.rules.map(r => `<div class="pop-rule">Everyone else: <b>${limitLabel(r.limit)}</b>${r.hours ? ', ' + hoursLabel(r.hours) : ' (hours not listed)'}</div>`).join('');
   let warn = '';
   if (p.rules.length > 1) warn += `<div class="pop-warn">The Parking Authority lists ${p.rules.length} different rules for this block and doesn't say which stretch each one covers. Check the signs.</div>`;
@@ -89,13 +134,13 @@ function popupHtml(p) {
   if (p.listedAs) warn += `<div class="pop-warn">The Parking Authority lists this block under District ${list(p.listedAs, 'and')}, which is far from here. It is shown as District ${list(d, 'and')} because of where it is. Check the signs.</div>`;
   return `<div class="pop-title">${blockLabel(p.block)}</div>
     <div class="pop-sub">${SIDE[p.side]} · District${d.length > 1 ? 's' : ''} ${list(d, 'and')}</div>
-    <div>District ${list(d, 'or')} permit: <b>no time limit</b></div>${rules}${warn}`;
+    <div>District ${list(d, 'or')} permit: <b>no time limit</b></div>${rules}${walkLine}${warn}`;
 }
 
 // ---------- Drawing lines on the correct side of the street ----------
 // The data stores each block as the street's centre line, pointing so that the permit
 // side is on the RIGHT. Here we slide the line a few screen pixels to the right.
-const blocks = [];   // { lines, centred, casing, layers }
+const blocks = [];   // { p, lines, centred, casing, layers, colors }
 let weight = 3;
 
 function shiftRight(lonLats, px, zoom) {
@@ -122,9 +167,252 @@ function redraw() {
     b.casing.setLatLngs(latLngs).setStyle({ weight: casingWeight });
     b.layers.forEach((layer, i) => layer.setLatLngs(latLngs).setStyle({ weight, ...dashOf(i, b.layers.length, weight) }));
   }
+  if (walk) {
+    // the coloured pieces of the chosen district's blocks, one layer per 5-minute step
+    const mine = blocks.filter(b => b.p.districts.includes(walk.district));
+    blockBands.forEach((layer, k) => layer.setStyle({ weight })
+      .setLatLngs(mine.flatMap(b => b.walkPieces[k].map(piece => shiftRight(piece, b.centred ? 0 : shift, z)))));
+    streetBands.forEach(layer => layer.setStyle({ weight: Math.max(1.5, weight / 2) }));
+  }
   map.getContainer().classList.toggle('far', z < 14);
 }
 map.on('zoomend', redraw);
+
+// ---------- Walk times ----------
+// Pick a starting point and the chosen district's permit lines are coloured by how long the walk is.
+// The walking distances are worked out here in the page, along the street network in data/walk.json.
+const WALK_COLORS = ['#0d366b', '#1c5cab', '#3987e5', '#86b6ef'];   // 0-5, 5-10, 10-15, 15-20 minutes
+const WALK_GREY = '#aaa39b';
+const METRES_PER_MIN = 80;                            // about 3 mph
+const BAND = 5 * METRES_PER_MIN, LIMIT = 4 * BAND;    // 5-minute steps, 20 minutes in all
+const KX = 111320 * Math.cos(39.99 * Math.PI / 180), KY = 110540;   // metres per degree of longitude and latitude here
+const toM = c => [c[0] * KX, c[1] * KY], toLonLat = m => [m[0] / KX, m[1] / KY];
+
+let walk = null;     // while a starting point is set: { district, marker }
+let net = null;      // the street network, loaded the first time it is needed
+const rings = {};    // district -> outline, to guess the district of an address
+const walkPane = map.createPane('walk');
+walkPane.style.zIndex = 350;                          // street shading sits under the permit lines
+const walkCanvas = L.canvas({ pane: 'walk' });
+const streetBands = WALK_COLORS.map(color => L.polyline([], { renderer: walkCanvas, color, opacity: 0.5, interactive: false }));
+const blockBands = WALK_COLORS.map(color => L.polyline([], { renderer: canvas, color, lineCap: 'butt', interactive: false }));
+
+const cell = (m, dx = 0, dy = 0) => (Math.floor(m[0] / 60) + dx) + ',' + (Math.floor(m[1] / 60) + dy);
+
+async function loadNet() {
+  if (net) return net;
+  const res = await fetch('data/walk.json');
+  if (!res.ok) throw new Error(res.status);
+  const w = await res.json();
+  const at = [];                                      // each corner's position in metres
+  for (let i = 0; i < w.n.length; i += 2) at.push(toM([w.o[0] + w.n[i] / 1e5, w.o[1] + w.n[i + 1] / 1e5]));
+  const next = at.map(() => []);                      // corner -> neighbour, metres, neighbour, metres, ...
+  for (let i = 0; i < w.e.length; i += 3) { next[w.e[i]].push(w.e[i + 1], w.e[i + 2]); next[w.e[i + 1]].push(w.e[i], w.e[i + 2]); }
+  const grid = new Map();                             // 60 m squares, to find the corner nearest a point
+  at.forEach((m, i) => { const k = cell(m); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(i); });
+  return net = { w, at, next, grid };
+}
+
+function cornerNear(m) {     // the network corner within 20 m of a point, if any
+  let best = null;
+  for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const i of net.grid.get(cell(m, dx, dy)) || []) {
+    const d = Math.hypot(net.at[i][0] - m[0], net.at[i][1] - m[1]);
+    if (d < 20 && (!best || d < best.d)) best = { i, d };
+  }
+  return best;
+}
+
+function pieceLine(k) {      // the points of street piece k, corner to corner
+  const w = net.w, bends = w.g[k], pts = [net.at[w.e[3 * k]]];
+  if (bends) for (let j = 0; j < bends.length; j += 2) pts.push(toM([w.o[0] + bends[j] / 1e5, w.o[1] + bends[j + 1] / 1e5]));
+  pts.push(net.at[w.e[3 * k + 1]]);
+  return pts;
+}
+
+// Walking distance in metres from a point to every corner within 20 minutes (Infinity beyond that)
+function walkFrom(m) {
+  const { w, at, next } = net;
+  let start = null;                                   // the nearest street piece
+  for (let k = 0; k < w.e.length / 3; k++) {
+    const a = at[w.e[3 * k]], b = at[w.e[3 * k + 1]], dx = b[0] - a[0], dy = b[1] - a[1];
+    const t = Math.max(0, Math.min(1, ((m[0] - a[0]) * dx + (m[1] - a[1]) * dy) / (dx * dx + dy * dy || 1)));
+    const d = Math.hypot(a[0] + t * dx - m[0], a[1] + t * dy - m[1]);
+    if (!start || d < start.d) start = { k, t, d };
+  }
+  if (start.d > 250) return null;
+  const dist = new Float64Array(at.length).fill(Infinity), heap = [];
+  const push = item => {
+    heap.push(item);
+    for (let i = heap.length - 1; i > 0;) { const up = (i - 1) >> 1; if (heap[up][0] <= heap[i][0]) break; [heap[up], heap[i]] = [heap[i], heap[up]]; i = up; }
+  };
+  const pop = () => {
+    const top = heap[0], last = heap.pop();
+    if (heap.length) {
+      heap[0] = last;
+      for (let i = 0; ;) {
+        const l = 2 * i + 1, r = l + 1; let low = i;
+        if (l < heap.length && heap[l][0] < heap[low][0]) low = l;
+        if (r < heap.length && heap[r][0] < heap[low][0]) low = r;
+        if (low === i) break;
+        [heap[low], heap[i]] = [heap[i], heap[low]]; i = low;
+      }
+    }
+    return top;
+  };
+  const reach = (i, d) => { if (d < dist[i] && d <= LIMIT) { dist[i] = d; push([d, i]); } };
+  const len = w.e[3 * start.k + 2];
+  reach(w.e[3 * start.k], start.d + start.t * len);
+  reach(w.e[3 * start.k + 1], start.d + (1 - start.t) * len);
+  while (heap.length) {
+    const [d, i] = pop();
+    if (d > dist[i]) continue;
+    for (let j = 0; j < next[i].length; j += 2) reach(next[i][j], d + next[i][j + 1]);
+  }
+  return dist;
+}
+
+// Cut a line into pieces by 5-minute step. dA and dB are the walking distances to its two ends.
+// Adds each piece to out[step] and returns the distance to the line's nearest point.
+function cutByTime(pts, dA, dB, out, convert) {
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const L = cum[cum.length - 1], f = s => Math.min(dA + s, dB + L - s);
+  if (Math.min(dA, dB) >= LIMIT) return Infinity;
+  const pointAt = s => {
+    let i = 1; while (i < cum.length - 1 && cum[i] < s) i++;
+    const t = (s - cum[i - 1]) / (cum[i] - cum[i - 1] || 1);
+    return [pts[i - 1][0] + t * (pts[i][0] - pts[i - 1][0]), pts[i - 1][1] + t * (pts[i][1] - pts[i - 1][1])];
+  };
+  const cuts = [0, L];
+  for (let T = BAND; T <= LIMIT; T += BAND) for (const s of [T - dA, L - T + dB]) if (s > 0 && s < L && Math.abs(f(s) - T) < 0.01) cuts.push(s);
+  cuts.sort((a, b) => a - b);
+  for (let i = 1; i < cuts.length; i++) {
+    const s0 = cuts[i - 1], s1 = cuts[i], step = Math.floor(f((s0 + s1) / 2) / BAND);
+    if (step < 4 && s1 - s0 > 0.01) out[step].push([pointAt(s0), ...pts.filter((_, j) => cum[j] > s0 && cum[j] < s1), pointAt(s1)].map(convert));
+  }
+  return Math.min(dA, dB);
+}
+
+const say = (text, isError) => { const el = document.getElementById('wmsg'); el.textContent = text; el.classList.toggle('error', !!isError); };
+const inRing = (ring, p) => {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const a = ring[i], b = ring[j];
+    if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside;
+  }
+  return inside;
+};
+
+async function startWalk(lon, lat, label) {
+  if (!blocks.length) return;
+  say('Working out walking times...');
+  try { await loadNet(); } catch { return say('The walking network did not load.', true); }
+  const dist = walkFrom(toM([lon, lat]));
+  if (!dist) return say('That spot is not near a Philadelphia street.', true);
+  clearWalk();
+  map.closePopup();
+
+  // every permit block: its pieces by 5-minute step, and how far its nearest point is
+  let nearest = null;
+  for (const b of blocks) {
+    b.walkPieces = [[], [], [], []];
+    b.walkMetres = Infinity;
+    for (const line of b.lines) {
+      const pts = line.map(toM), A = cornerNear(pts[0]), B = cornerNear(pts[pts.length - 1]);
+      b.walkMetres = Math.min(b.walkMetres, cutByTime(pts, A ? dist[A.i] + A.d : Infinity, B ? dist[B.i] + B.d : Infinity, b.walkPieces, toLonLat));
+    }
+    if (!nearest || b.walkMetres < nearest.walkMetres) nearest = b;
+  }
+  // every street within reach, for the shading
+  const streets = [[], [], [], []], e = net.w.e;
+  for (let k = 0; k < e.length / 3; k++) {
+    if (Math.min(dist[e[3 * k]], dist[e[3 * k + 1]]) < LIMIT) cutByTime(pieceLine(k), dist[e[3 * k]], dist[e[3 * k + 1]], streets, m => [m[1] / KY, m[0] / KX]);
+  }
+  streetBands.forEach((layer, k) => layer.setLatLngs(streets[k]));
+
+  // the district the starting point is in, or failing that the one with the nearest permit block
+  const select = document.getElementById('wdist');
+  const home = Object.keys(rings).map(Number).find(d => inRing(rings[d], [lon, lat]) && select.querySelector(`option[value="${d}"]`));
+  const marker = L.circleMarker([lat, lon], { radius: 8, color: '#fff', weight: 3, fillColor: '#1f2328', fillOpacity: 1, interactive: false }).addTo(map);
+  walk = { district: home !== undefined ? home : nearest.p.districts[0], marker };
+  select.value = walk.district;
+
+  for (const b of blocks) b.layers.forEach(layer => layer.setStyle({ color: WALK_GREY }));
+  blockBands.forEach(layer => layer.addTo(map));
+  if (document.getElementById('wstreets').checked) streetBands.forEach(layer => layer.addTo(map));
+  // show about a 15-minute walk each way, so the lines stay thick enough to read on a phone
+  const half = 3 * BAND;
+  map.fitBounds([[lat - half / KY, lon - half / KX], [lat + half / KY, lon + half / KX]], { animate: false });
+  redraw();
+  document.getElementById('wresult').hidden = false;
+  document.getElementById('wmini').hidden = false;
+  // on a phone the open panel would cover the result, so fold it away (its title bar keeps the colour key)
+  if (window.innerWidth <= 600) document.querySelector('.walk').open = false;
+  reportWalk(label);
+}
+
+function reportWalk(label) {
+  if (label) walk.label = label;
+  const count = blocks.filter(b => b.p.districts.includes(walk.district) && b.walkMetres < LIMIT).length;
+  say(count ? `${count} District ${walk.district} permit block sides within a 20-minute walk of ${walk.label}.`
+            : `No District ${walk.district} permit blocks within a 20-minute walk of ${walk.label}.`);
+}
+
+function clearWalk() {
+  if (!walk) return;
+  walk.marker.remove();
+  blockBands.forEach(layer => layer.remove());
+  streetBands.forEach(layer => layer.remove());
+  for (const b of blocks) b.layers.forEach((layer, i) => layer.setStyle({ color: b.colors[i] }));
+  walk = null;
+  map.closePopup();
+  document.getElementById('wresult').hidden = true;
+  document.getElementById('wmini').hidden = true;
+  say('');
+}
+
+// Look an address up with OpenStreetMap's Nominatim service (one request each time Go is pressed)
+async function findAddress(text) {
+  const q = /phila/i.test(text) ? text : text + ', Philadelphia, PA';
+  const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=us&bounded=1&viewbox=-75.29,40.14,-74.95,39.86&q=' + encodeURIComponent(q);
+  const hits = await (await fetch(url)).json();
+  return hits.length ? { lon: +hits[0].lon, lat: +hits[0].lat } : null;
+}
+
+let picking = false;
+function setPicking(on) {
+  picking = on;
+  document.getElementById('wpick').classList.toggle('on', on);
+  map.getContainer().classList.toggle('picking', on);
+  if (on) say('Tap the map where you want to start.');
+}
+map.on('click', e => { if (picking) { setPicking(false); startWalk(e.latlng.lng, e.latlng.lat, 'the point you picked'); } });
+
+document.getElementById('wform').addEventListener('submit', async e => {
+  e.preventDefault();
+  const text = document.getElementById('waddr').value.trim();
+  if (!text) return;
+  setPicking(false);
+  say('Looking up the address...');
+  try {
+    const hit = await findAddress(text);
+    if (hit) startWalk(hit.lon, hit.lat, text);
+    else say('No match in Philadelphia. Try a street address such as 1400 Bainbridge St.', true);
+  } catch { say('The address lookup did not answer. Try "Pick on map" instead.', true); }
+});
+document.getElementById('wloc').addEventListener('click', () => {
+  setPicking(false);
+  if (!navigator.geolocation) return say('This browser cannot share a location.', true);
+  say('Finding your location...');
+  navigator.geolocation.getCurrentPosition(
+    pos => startWalk(pos.coords.longitude, pos.coords.latitude, 'your location'),
+    () => say('Could not get your location. Try an address or "Pick on map".', true),
+    { enableHighAccuracy: true, timeout: 10000 });
+});
+document.getElementById('wpick').addEventListener('click', () => setPicking(!picking));
+document.getElementById('wclear').addEventListener('click', clearWalk);
+document.getElementById('wdist').addEventListener('change', e => { if (walk) { walk.district = +e.target.value; map.closePopup(); redraw(); reportWalk(); } });
+document.getElementById('wstreets').addEventListener('change', e => { if (walk) streetBands.forEach(layer => e.target.checked ? layer.addTo(map) : layer.remove()); });
 
 // ---------- Load the data ----------
 function centreOf(ring) {       // middle of a district outline, for its label
@@ -147,7 +435,7 @@ async function load() {
     const p = f.properties;
     if (p.kind === 'district') {
       const color = colorOf[p.district] = PALETTE[p.color % PALETTE.length];
-      const ring = f.geometry.coordinates[0];
+      const ring = rings[p.district] = f.geometry.coordinates[0];
       L.polygon(ring.map(c => [c[1], c[0]]), { renderer: canvas, color, weight: 2, dashArray: '6 6', fillOpacity: 0.06, interactive: false }).addTo(map);
       L.marker(centreOf(ring), { interactive: false, keyboard: false,
         icon: L.divIcon({ className: 'dlabel', iconSize: [0, 0], html: `<span style="color:${color}"><small>District </small>${p.district}</span>` }) }).addTo(map);
@@ -156,14 +444,18 @@ async function load() {
       const casing = L.polyline([], { renderer: canvas, color: '#fff', opacity: 0.9, lineCap: 'butt', interactive: false }).addTo(casings);
       const layers = p.districts.map((d, i) =>
         L.polyline([], { renderer: canvas, color: colorOf[d] || '#555', lineCap: 'butt', interactive: i === 0 }).addTo(lines));
-      layers[0].bindPopup(() => popupHtml(p));
+      const block = { p, lines: f.geometry.coordinates, centred: p.side === '?', casing, layers, colors: p.districts.map(d => colorOf[d] || '#555') };
+      layers[0].bindPopup(() => popupHtml(p, block));
       layers[0].on('mouseover', () => layers.forEach(l => l.setStyle({ weight: weight + 3 })));
       layers[0].on('mouseout', () => layers.forEach(l => l.setStyle({ weight })));
-      blocks.push({ lines: f.geometry.coordinates, centred: p.side === '?', casing, layers });
+      blocks.push(block);
     }
   }
   lines.addTo(map);
   redraw();
+  // the districts that have permit blocks, for the walk-time panel
+  const withBlocks = [...new Set(blocks.flatMap(b => b.p.districts))].sort((a, b) => a - b);
+  document.getElementById('wdist').innerHTML = withBlocks.map(d => `<option value="${d}">District ${d}</option>`).join('');
   document.getElementById('note').textContent =
     `Unofficial map built from the Parking Authority's published list as of ${data.generated}. That list can be out of date or wrong. Posted signs always win.`;
 }
